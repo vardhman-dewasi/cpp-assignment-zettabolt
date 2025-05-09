@@ -1,10 +1,9 @@
 #include "../include/tpch_structs.h"
 #include <iostream>
-#include <unordered_map>
-#include <map>
+#include <bits/stdc++.h>
+
 #include <mutex>
 #include <thread>
-#include <vector>
 #include <chrono>
 #include "file_reader.cpp"  // Or separate headers if modularized
 
