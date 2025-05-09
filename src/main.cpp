@@ -6,8 +6,9 @@
 #include <chrono>
 #include <fstream>
 
-std::mutex mtx; // For synchronizing shared data access
+std::mutex mtx; // Mutex to synchronize access to shared `nationRevenue` map across threads
 
+// Function to process a chunk of orders and accumulate revenue per nation
 void processChunk(
     const std::vector<Order>& orders,
     const std::unordered_map<int, int>& custToNation,
@@ -24,22 +25,28 @@ void processChunk(
 ) {
     std::unordered_map<std::string, double> localMap;
 
+    // Iterate through assigned orders
     for (int i = start; i < end; ++i) {
         const Order& o = orders[i];
 
+        // Filter orders based on date range
         if (o.o_orderdate >= startDate && o.o_orderdate < endDate) {
             int custKey = o.o_custkey;
             if (custToNation.count(custKey) == 0) continue;
             int nationKey = custToNation.at(custKey);
 
+            // Check if customer belongs to correct region
             if (nationToRegion.count(nationKey) == 0) continue;
             int regionKey = nationToRegion.at(nationKey);
             std::string regionName = regionNames.at(regionKey);
             if (regionName != regionFilter) continue;
 
+            // Get associated line items for the order
             if (orderToLineItems.count(o.o_orderkey) == 0) continue;
             for (const auto& li : orderToLineItems.at(o.o_orderkey)) {
                 if (suppToNation.count(li.l_suppkey) == 0) continue;
+
+                // Supplier and customer must be from same nation
                 int suppNation = suppToNation.at(li.l_suppkey);
                 if (suppNation != nationKey) continue;
 
@@ -50,16 +57,18 @@ void processChunk(
         }
     }
 
+    // Lock and update shared result map
     std::lock_guard<std::mutex> lock(mtx);
     for (const auto& [nation, rev] : localMap)
         localRevenue[nation] += rev;
 }
 
 int main(int argc, char* argv[]) {
-    std::ofstream log("output.txt");
+    std::ofstream log("output.txt"); // Output log file
 
     log << "Reading data files...\n";
 
+    // Load data from .tbl files into corresponding structs
     auto regions = readRegions("data/region.tbl");
     auto nations = readNations("data/nation.tbl");
     auto customers = readCustomers("data/customer.tbl");
@@ -67,6 +76,7 @@ int main(int argc, char* argv[]) {
     auto lineitems = readLineItems("data/lineitem.tbl");
     auto suppliers = readSuppliers("data/supplier.tbl");
 
+    // Log data loading stats
     log << "Data loading complete:\n";
     log << "Regions: " << regions.size() << "\n";
     log << "Nations: " << nations.size() << "\n";
@@ -75,6 +85,7 @@ int main(int argc, char* argv[]) {
     log << "LineItems: " << lineitems.size() << "\n";
     log << "Suppliers: " << suppliers.size() << "\n\n";
 
+    // Preprocess lookup maps for fast access during query
     std::unordered_map<int, std::string> regionNames;
     for (const auto& r : regions) regionNames[r.r_regionkey] = r.r_name;
 
@@ -91,19 +102,21 @@ int main(int argc, char* argv[]) {
     std::unordered_map<int, int> suppToNation;
     for (const auto& s : suppliers) suppToNation[s.s_suppkey] = s.s_nationkey;
 
+    // Group lineitems by order key for fast lookup
     std::unordered_map<int, std::vector<LineItem>> orderToLineItems;
     for (const auto& li : lineitems)
         orderToLineItems[li.l_orderkey].push_back(li);
 
+    // Multithreading setup
     int numThreads = 4;
     std::vector<std::thread> threads;
     std::unordered_map<std::string, double> nationRevenue;
-
     int chunkSize = orders.size() / numThreads;
 
     log << "Starting multithreaded processing...\n";
     auto start = std::chrono::high_resolution_clock::now();
 
+    // Launch threads to process chunks of the orders vector
     for (int i = 0; i < numThreads; ++i) {
         int s = i * chunkSize;
         int e = (i == numThreads - 1) ? orders.size() : (i + 1) * chunkSize;
@@ -116,11 +129,12 @@ int main(int argc, char* argv[]) {
             std::ref(regionNames),
             std::ref(orderToLineItems),
             std::ref(suppToNation),
-            "ASIA", "1993-01-01", "1996-01-01",
+            "ASIA", "1995-01-01", "1996-01-01",
             std::ref(nationRevenue), s, e
         );
     }
 
+    // Wait for all threads to finish
     for (auto& t : threads) t.join();
 
     auto end = std::chrono::high_resolution_clock::now();
@@ -129,10 +143,12 @@ int main(int argc, char* argv[]) {
     log << "Processing complete.\n\n";
     log << "Sorting results...\n";
 
+    // Sort results by descending revenue
     std::vector<std::pair<std::string, double>> sortedResults(nationRevenue.begin(), nationRevenue.end());
     std::sort(sortedResults.begin(), sortedResults.end(),
               [](auto& a, auto& b) { return a.second > b.second; });
 
+    // Output the final revenue per nation
     log << "Final Revenue by Nation (in ASIA, 1995):\n";
     for (const auto& [nation, rev] : sortedResults)
         log << nation << ": " << rev << "\n";
