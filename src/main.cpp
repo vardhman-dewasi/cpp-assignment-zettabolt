@@ -1,5 +1,7 @@
 #include "../include/tpch_structs.h"
 #include "../include/file_reader.h"
+#include "../include/cli_parser.h"
+
 #include <bits/stdc++.h>
 #include <mutex>
 #include <thread>
@@ -64,26 +66,30 @@ void processChunk(
 }
 
 int main(int argc, char* argv[]) {
-    std::ofstream log("output.txt"); // Output log file
+    //--- Parse CLI Arguments ---
+    CLIArgs args = parseCLIArgs(argc, argv);
 
-    log << "Reading data files...\n";
+    std::ofstream log(args.outputPath);
 
-    // Load data from .tbl files into corresponding structs
-    auto regions = readRegions("data/region.tbl");
-    auto nations = readNations("data/nation.tbl");
-    auto customers = readCustomers("data/customer.tbl");
-    auto orders = readOrders("data/orders.tbl");
-    auto lineitems = readLineItems("data/lineitem.tbl");
-    auto suppliers = readSuppliers("data/supplier.tbl");
+    log << "Reading data files from: " << args.dataDir << "\n";
+
+    // --- Load Data ---
+    auto regions   = readRegions(args.dataDir + "region.tbl");
+    auto nations   = readNations(args.dataDir + "nation.tbl");
+    auto customers = readCustomers(args.dataDir + "customer.tbl");
+    auto orders    = readOrders(args.dataDir + "orders.tbl");
+    auto lineitems = readLineItems(args.dataDir + "lineitem.tbl");
+    auto suppliers = readSuppliers(args.dataDir + "supplier.tbl");
+
+    log << "Data loading complete.\n";
 
     // Log data loading stats
-    log << "Data loading complete:\n";
     log << "Regions: " << regions.size() << "\n";
     log << "Nations: " << nations.size() << "\n";
     log << "Customers: " << customers.size() << "\n";
     log << "Orders: " << orders.size() << "\n";
     log << "LineItems: " << lineitems.size() << "\n";
-    log << "Suppliers: " << suppliers.size() << "\n\n";
+    log << "Suppliers: " << suppliers.size() << "\n";
 
     // Preprocess lookup maps for fast access during query
     std::unordered_map<int, std::string> regionNames;
@@ -108,12 +114,12 @@ int main(int argc, char* argv[]) {
         orderToLineItems[li.l_orderkey].push_back(li);
 
     // Multithreading setup
-    int numThreads = 4;
+    int numThreads = args.numThreads;
     std::vector<std::thread> threads;
     std::unordered_map<std::string, double> nationRevenue;
     int chunkSize = orders.size() / numThreads;
 
-    log << "Starting multithreaded processing...\n";
+    log << "Launching " << numThreads << " threads...\n";
     auto start = std::chrono::high_resolution_clock::now();
 
     // Launch threads to process chunks of the orders vector
@@ -129,7 +135,7 @@ int main(int argc, char* argv[]) {
             std::ref(regionNames),
             std::ref(orderToLineItems),
             std::ref(suppToNation),
-            "ASIA", "1995-01-01", "1996-01-01",
+            args.regionName, args.startDate, args.endDate,
             std::ref(nationRevenue), s, e
         );
     }
@@ -149,12 +155,12 @@ int main(int argc, char* argv[]) {
               [](auto& a, auto& b) { return a.second > b.second; });
 
     // Output the final revenue per nation
-    log << "Final Revenue by Nation (in ASIA, 1995):\n";
+    log << "Final Revenue by Nation:\n";
     for (const auto& [nation, rev] : sortedResults)
         log << nation << ": " << rev << "\n";
 
     log << "\nExecution Time: " << diff.count() << " seconds\n";
 
-    std::cout << "Results written to output.txt\n";
+    std::cout << "Results written to: "<< args.outputPath <<"\n";
     return 0;
 }
