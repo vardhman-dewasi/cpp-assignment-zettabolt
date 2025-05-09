@@ -1,5 +1,5 @@
-#include "../include/tpch_structs.h"
-#include "file_reader.h"
+#include "../include/file_reader.h"
+#include <bits/stdc++.h>
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -14,12 +14,19 @@ std::vector<Region> readRegions(const std::string& path) {
     std::string line;
 
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         Region r;
-        // Format: r_regionkey|r_name|...
-        std::getline(ss, line, '|'); r.r_regionkey = std::stoi(line);
-        std::getline(ss, r.r_name, '|');
-        regions.push_back(r);
+        std::string token;
+
+        try {
+            std::getline(ss, token, '|'); r.r_regionkey = std::stoi(token);
+            std::getline(ss, r.r_name, '|');
+            regions.push_back(r);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in region line: " << line << "\nReason: " << e.what() << "\n";
+        }
     }
 
     return regions;
@@ -34,13 +41,20 @@ std::vector<Nation> readNations(const std::string& path) {
     std::string line;
 
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         Nation n;
-        // Format: n_nationkey|n_name|n_regionkey|...
-        std::getline(ss, line, '|'); n.n_nationkey = std::stoi(line);
-        std::getline(ss, n.n_name, '|');
-        std::getline(ss, line, '|'); n.n_regionkey = std::stoi(line);
-        nations.push_back(n);
+        std::string token;
+
+        try {
+            std::getline(ss, token, '|'); n.n_nationkey = std::stoi(token);
+            std::getline(ss, n.n_name, '|');
+            std::getline(ss, token, '|'); n.n_regionkey = std::stoi(token);
+            nations.push_back(n);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in nation line: " << line << "\nReason: " << e.what() << "\n";
+        }
     }
 
     return nations;
@@ -55,13 +69,21 @@ std::vector<Customer> readCustomers(const std::string& path) {
     std::string line;
 
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         Customer c;
-        // Format: c_custkey|...|c_nationkey|...
-        std::getline(ss, line, '|'); c.c_custkey = std::stoi(line);
-        std::getline(ss, line, '|'); // skip c_name
-        std::getline(ss, line, '|'); c.c_nationkey = std::stoi(line);
-        customers.push_back(c);
+        std::string token;
+
+        try {
+            std::getline(ss, token, '|'); c.c_custkey = std::stoi(token);
+            std::getline(ss, token, '|'); // skip c_name
+            std::getline(ss, token, '|'); // skip c_address
+            std::getline(ss, token, '|'); c.c_nationkey = std::stoi(token);
+            customers.push_back(c);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in customer line: " << line << "\nReason: " << e.what() << "\n";
+        }
     }
 
     return customers;
@@ -76,17 +98,24 @@ std::vector<Order> readOrders(const std::string& path) {
     std::string line;
 
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         Order o;
-        // Format: o_orderkey|o_custkey|...|o_orderdate|...
-        std::getline(ss, line, '|'); o.o_orderkey = std::stoi(line);
-        std::getline(ss, line, '|'); o.o_custkey = std::stoi(line);
+        std::string token;
 
-        // Skip 3 columns: order status, total price, order priority
-        for (int i = 0; i < 3; ++i) std::getline(ss, line, '|');
+        try {
+            std::getline(ss, token, '|'); o.o_orderkey = std::stoi(token);
+            std::getline(ss, token, '|'); o.o_custkey = std::stoi(token);
 
-        std::getline(ss, o.o_orderdate, '|'); // Get order date
-        orders.push_back(o);
+            // Skip 3 columns: order status, total price, order priority
+            for (int i = 0; i < 3; ++i) std::getline(ss, token, '|');
+
+            std::getline(ss, o.o_orderdate, '|'); // Get order date
+            orders.push_back(o);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in order line: " << line << "\nReason: " << e.what() << "\n";
+        }
     }
 
     return orders;
@@ -101,19 +130,25 @@ std::vector<LineItem> readLineItems(const std::string& path) {
     std::string line;
 
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         LineItem li;
-        // Format: l_orderkey|...|l_suppkey|...|l_extendedprice|l_discount|...
-        std::getline(ss, line, '|'); li.l_orderkey = std::stoi(line);
+        std::string token;
 
-        std::getline(ss, line, '|'); // skip partkey
-        std::getline(ss, line, '|'); li.l_suppkey = std::stoi(line);
+        try {
+            std::getline(ss, token, '|'); li.l_orderkey = std::stoi(token);
+            std::getline(ss, token, '|'); // skip partkey
+            std::getline(ss, token, '|'); li.l_suppkey = std::stoi(token);
+            std::getline(ss, token, '|'); // skip linenumber
+            std::getline(ss, token, '|'); // skip quantity
+            std::getline(ss, token, '|'); li.l_extendedprice = std::stod(token);
+            std::getline(ss, token, '|'); li.l_discount = std::stod(token);
 
-        std::getline(ss, line, '|'); // skip quantity
-        std::getline(ss, line, '|'); li.l_extendedprice = std::stod(line);
-        std::getline(ss, line, '|'); li.l_discount = std::stod(line);
-
-        items.push_back(li);
+            items.push_back(li);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in lineitem line: " << line << "\nReason: " << e.what() << "\n";
+        }
     }
 
     return items;
@@ -128,13 +163,25 @@ std::vector<Supplier> readSuppliers(const std::string& path) {
     std::string line;
 
     while (std::getline(file, line)) {
+        if (line.empty()) continue;
+
         std::stringstream ss(line);
         Supplier s;
-        // Format: s_suppkey|...|s_nationkey|...
-        std::getline(ss, line, '|'); s.s_suppkey = std::stoi(line);
-        std::getline(ss, line, '|'); // skip s_name
-        std::getline(ss, line, '|'); s.s_nationkey = std::stoi(line);
-        suppliers.push_back(s);
+        std::string token;
+
+        try {
+            // Format: s_suppkey|s_name|address|nationkey|phone|acctbal|comment
+            std::getline(ss, token, '|'); s.s_suppkey = std::stoi(token);
+            std::getline(ss, token, '|'); // skip s_name
+            std::getline(ss, token, '|'); // skip address
+            std::getline(ss, token, '|'); s.s_nationkey = std::stoi(token);
+            std::getline(ss, token, '|'); // skip phone
+            std::getline(ss, token, '|'); s.s_acctbal = std::stod(token);
+
+            suppliers.push_back(s);
+        } catch (const std::exception& e) {
+            std::cerr << "Error in supplier line: " << line << "\nReason: " << e.what() << "\n";
+        }
     }
 
     return suppliers;
