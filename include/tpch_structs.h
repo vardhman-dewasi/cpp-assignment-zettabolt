@@ -35,6 +35,7 @@ struct LineItem {
 struct Supplier {
     int s_suppkey;
     int s_nationkey;
+    double s_acctbal;
 };
 
 #endif // TPCH_STRUCTS_H
