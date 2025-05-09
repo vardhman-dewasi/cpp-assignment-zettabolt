@@ -1,4 +1,5 @@
 #include "../include/tpch_structs.h"
+#include "file_reader.h"
 #include <fstream>
 #include <sstream>
 #include <vector>

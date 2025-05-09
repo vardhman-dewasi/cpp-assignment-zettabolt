@@ -5,7 +5,7 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
-#include "file_reader.cpp"  // Or separate headers if modularized
+#include "file_reader.cpp"
 
 std::mutex mtx; // For synchronizing shared data access
 
