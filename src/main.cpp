@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
     log << "Customers: " << customers.size() << "\n";
     log << "Orders: " << orders.size() << "\n";
     log << "LineItems: " << lineitems.size() << "\n";
-    log << "Suppliers: " << suppliers.size() << "\n";
+    log << "Suppliers: " << suppliers.size() << "\n\n";
 
     // Preprocess lookup maps for fast access during query
     std::unordered_map<int, std::string> regionNames;
