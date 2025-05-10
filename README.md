@@ -103,7 +103,7 @@ Execution Time: 0.562 seconds
 
 ### The TPC-H Schema
 
-![Tpch Schema](<include/Screenshot 2025-05-10 212335.png>)
+![Tpch Schema](<include/schema ss.png>)
 
 
 ### Step 1: Data Preparation
