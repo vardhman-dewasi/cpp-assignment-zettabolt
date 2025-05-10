@@ -4,7 +4,7 @@ This project implements TPC-H Query 5 ("Local Supplier Volume") in C++ using mul
 
 ---
 
-## 📦 Project Features
+## Project Features
 
 * Fully in-memory processing (no DBMS)
 * CLI-based parameter control (region, date range, thread count, paths)
@@ -13,14 +13,14 @@ This project implements TPC-H Query 5 ("Local Supplier Volume") in C++ using mul
 
 ---
 
-## 🛠 Dependencies
+## Dependencies
 
 * C++17 or later
 * Standard C++ STL libraries (no external dependencies)
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 tpch_q5_project/
@@ -41,7 +41,7 @@ tpch_q5_project/
 
 ---
 
-## ⚙️ Steps to Run the Project
+## Steps to Run the Project
 
 ### 1. Clone or Download
 
@@ -86,7 +86,7 @@ g++ -std=c++17 -O2 -pthread main.cpp src/cli_parser.cpp src/file_reader.cpp -o t
 
 ---
 
-## 📤 Sample Output (`output.txt`)
+## Sample Output (`output.txt`)
 
 ```
 Final Revenue by Nation (in ASIA, 1995):
@@ -98,7 +98,7 @@ Execution Time: 0.562 seconds
 
 ---
 
-## 🧠 How It Works - Step-by-Step
+## How It Works - Step-by-Step
 
 ### Step 1: Data Preparation
 
@@ -129,13 +129,13 @@ Execution Time: 0.562 seconds
 
 ---
 
-## 🧾 Credits
+## Credits
 
 * TPC-H Benchmark ([www.tpc.org](http://www.tpc.org))
 * Designed and implemented by Vardhman (2025)
 
 ---
 
-## 📩 Questions?
+## Questions?
 
 Feel free to reach out or fork this repo to build on it!
