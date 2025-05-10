@@ -32,9 +32,8 @@ tpch_q5_project/
 ├── src/
 │   ├── file_reader.cpp        # Implementations to load tables
 │   └── cli_parser.cpp         # CLI argument parsing logic
-│
+│   └── main.cpp               # Main multithreaded logic + CLI integration
 ├── data/                      # Directory containing .tbl files (generated from dbgen)
-├── main.cpp                   # Main multithreaded logic + CLI integration
 ├── output.txt                 # Output results after execution
 └── README.md                  # Project explanation & setup instructions
 ```
@@ -46,8 +45,8 @@ tpch_q5_project/
 ### 1. Clone or Download
 
 ```bash
-git clone <your-repo-url>
-cd tpch_q5_project
+git clone https://github.com/vardhman-dewasi/cpp-assignment-zettabolt.git
+cd cpp-assignment-zettabolt
 ```
 
 ### 2. Generate TPC-H Data (Optional if you already have `.tbl` files)
@@ -64,13 +63,13 @@ cd tpch_q5_project
 ### 3. Compile the Project
 
 ```bash
-g++ -std=c++17 -O2 -pthread main.cpp src/cli_parser.cpp src/file_reader.cpp -o tpch_q5
+g++ -std=c++17 -O2 -pthread main.cpp src/cli_parser.cpp src/file_reader.cpp -o main
 ```
 
 ### 4. Run the Executable
 
 ```bash
-./tpch_q5 ASIA 1995-01-01 1996-01-01 4 ./data/ output.txt
+./main ASIA 1995-01-01 1996-01-01 4 ./data/ output.txt
 ```
 
 ### CLI Parameters:
@@ -89,7 +88,7 @@ g++ -std=c++17 -O2 -pthread main.cpp src/cli_parser.cpp src/file_reader.cpp -o t
 ## Sample Output (`output.txt`)
 
 ```
-Final Revenue by Nation (in ASIA, 1995):
+Final Revenue by Nation :
 INDIA: 51234000.45
 CHINA: 50122344.20
 ...
@@ -97,6 +96,8 @@ Execution Time: 0.562 seconds
 ```
 
 ---
+
+
 
 ## How It Works - Step-by-Step
 
