@@ -101,6 +101,10 @@ Execution Time: 0.562 seconds
 
 ## How It Works - Step-by-Step
 
+## The TPC-H Schema
+
+[alt-text](<cpp-assignment-zettabolt/include/Screenshot 2025-05-10 212335.png>)
+
 ### Step 1: Data Preparation
 
 * Use `dbgen` to generate `.tbl` files for tables: region, nation, customer, supplier, orders, lineitem.
