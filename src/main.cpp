@@ -34,26 +34,38 @@ void processChunk(
         // Filter orders based on date range
         if (o.o_orderdate >= startDate && o.o_orderdate < endDate) {
             int custKey = o.o_custkey;
-            if (custToNation.count(custKey) == 0) continue;
-            int nationKey = custToNation.at(custKey);
+            auto custIt = custToNation.find(custKey);
+            if (custIt == custToNation.end()) continue;
+            int nationKey = custIt->second;
 
             // Check if customer belongs to correct region
-            if (nationToRegion.count(nationKey) == 0) continue;
-            int regionKey = nationToRegion.at(nationKey);
-            std::string regionName = regionNames.at(regionKey);
+            auto regionIt = nationToRegion.find(nationKey);
+            if (regionIt == nationToRegion.end()) continue;
+            int regionKey = regionIt->second;
+
+            auto regionNameIt = regionNames.find(regionKey);
+            if (regionNameIt == regionNames.end()) continue;
+            const std::string& regionName = regionNameIt->second;
+
             if (regionName != regionFilter) continue;
 
             // Get associated line items for the order
-            if (orderToLineItems.count(o.o_orderkey) == 0) continue;
-            for (const auto& li : orderToLineItems.at(o.o_orderkey)) {
-                if (suppToNation.count(li.l_suppkey) == 0) continue;
+            auto lineItemIt = orderToLineItems.find(o.o_orderkey);
+            if (lineItemIt == orderToLineItems.end()) continue;
+            
+            for (const auto& li : lineItemIt->second) {
+                auto suppIt = suppToNation.find(li.l_suppkey);
+                if (suppIt == suppToNation.end()) continue;
 
                 // Supplier and customer must be from same nation
-                int suppNation = suppToNation.at(li.l_suppkey);
+                int suppNation = suppIt->second;
                 if (suppNation != nationKey) continue;
 
                 // Calculate revenue and accumulate in local map
-                std::string nationName = nationNames.at(nationKey);
+                auto nationNameIt = nationNames.find(nationKey);
+                if (nationNameIt == nationNames.end()) continue;
+                const std::string& nationName = nationNameIt->second;
+
                 double revenue = li.l_extendedprice * (1 - li.l_discount);
                 localMap[nationName] += revenue;
             }
