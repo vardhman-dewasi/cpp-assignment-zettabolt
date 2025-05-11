@@ -26,11 +26,11 @@ This project implements TPC-H Query 5 ("Local Supplier Volume") in C++ using mul
 tpch_q5_project/
 ├── include/
 │   ├── tpch_structs.h         # Struct definitions for all tables
-│   ├── file_reader.h          # Data loading from .tbl files
+│   ├── file_reader.h          # Implementations to load tables
 │   └── cli_parser.h           # CLI argument parser header
 │
 ├── src/
-│   ├── file_reader.cpp        # Implementations to load tables
+│   ├── file_reader.cpp        # Data loading from .tbl files
 │   └── cli_parser.cpp         # CLI argument parsing logic
 │   └── main.cpp               # Main multithreaded logic + CLI integration
 ├── data/                      # Directory containing .tbl files (generated from dbgen)
