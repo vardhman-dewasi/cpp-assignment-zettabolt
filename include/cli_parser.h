@@ -1,7 +1,7 @@
 #ifndef CLI_PARSER_H 
 #define CLI_PARSER_H
 
-#include <string> // Required for using std::string
+#include <string>
 
 // Struct to store the parsed command-line arguments.
 // Each member corresponds to one of the parameters needed for TPCH Query 5.

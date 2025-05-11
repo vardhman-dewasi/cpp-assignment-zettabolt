@@ -11,28 +11,33 @@
 // Only r_regionkey and r_name are extracted
 //
 std::vector<Region> readRegions(const std::string& path) {
-    std::ifstream file(path);
-    std::vector<Region> regions;
-    std::string line;
+    std::ifstream file(path);                         // Open the file at the given path
+    std::vector<Region> regions;                      // Vector to store all parsed Region records
+    std::string line;                                 // Temporary string to store each line
 
-    while (std::getline(file, line)) {
-        if (line.empty()) continue;
+    while (std::getline(file, line)) {                // Read the file line by line
+        if (line.empty()) continue;                   // Skip empty lines if any
 
-        std::stringstream ss(line);
-        Region r;
-        std::string token;
+        std::stringstream ss(line);                   // Create a stringstream to tokenize the line
+        Region r;                                      // Create an empty Region struct to populate
+        std::string token;                             // Temporary string to store each token
 
         try {
-            std::getline(ss, token, '|'); r.r_regionkey = std::stoi(token);
-            std::getline(ss, r.r_name, '|');
+            std::getline(ss, token, '|');             // Get the first token (region key)
+            r.r_regionkey = std::stoi(token);         // Convert region key to integer
+
+            std::getline(ss, r.r_name, '|');          // Get the second token (region name)
+
             regions.push_back(r);
         } catch (const std::exception& e) {
+            // If there’s a parsing error, print the line and the error reason
             std::cerr << "Error in region line: " << line << "\nReason: " << e.what() << "\n";
         }
     }
 
     return regions;
 }
+
 
 //
 // Function to read data from nation.tbl

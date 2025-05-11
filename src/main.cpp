@@ -25,11 +25,11 @@ void processChunk(
     std::unordered_map<std::string, double>& localRevenue,
     int start, int end
 ) {
-    std::unordered_map<std::string, double> localMap;
+    std::unordered_map<std::string, double> localMap; // Thread-local revenue map
 
     // Iterate through assigned orders
     for (int i = start; i < end; ++i) {
-        const Order& o = orders[i];
+        const Order& o = orders[i];     //Current order
 
         // Filter orders based on date range
         if (o.o_orderdate >= startDate && o.o_orderdate < endDate) {
@@ -52,6 +52,7 @@ void processChunk(
                 int suppNation = suppToNation.at(li.l_suppkey);
                 if (suppNation != nationKey) continue;
 
+                // Calculate revenue and accumulate in local map
                 std::string nationName = nationNames.at(nationKey);
                 double revenue = li.l_extendedprice * (1 - li.l_discount);
                 localMap[nationName] += revenue;
@@ -59,7 +60,7 @@ void processChunk(
         }
     }
 
-    // Lock and update shared result map
+    // Merge localMap into shared result under mutex
     std::lock_guard<std::mutex> lock(mtx);
     for (const auto& [nation, rev] : localMap)
         localRevenue[nation] += rev;
@@ -92,9 +93,13 @@ int main(int argc, char* argv[]) {
     log << "Suppliers: " << suppliers.size() << "\n\n";
 
     // Preprocess lookup maps for fast access during query
-    std::unordered_map<int, std::string> regionNames;
-    for (const auto& r : regions) regionNames[r.r_regionkey] = r.r_name;
 
+    // Region ID → Region Name
+    std::unordered_map<int, std::string> regionNames;
+    for (const auto& r : regions)
+        regionNames[r.r_regionkey] = r.r_name;
+
+    // Nation ID → Region ID and Nation ID → Nation Name
     std::unordered_map<int, int> nationToRegion;
     std::unordered_map<int, std::string> nationNames;
     for (const auto& n : nations) {
@@ -102,52 +107,66 @@ int main(int argc, char* argv[]) {
         nationNames[n.n_nationkey] = n.n_name;
     }
 
+    // Customer ID → Nation ID
     std::unordered_map<int, int> custToNation;
-    for (const auto& c : customers) custToNation[c.c_custkey] = c.c_nationkey;
+    for (const auto& c : customers)
+        custToNation[c.c_custkey] = c.c_nationkey;
 
+    // Supplier ID → Nation ID
     std::unordered_map<int, int> suppToNation;
-    for (const auto& s : suppliers) suppToNation[s.s_suppkey] = s.s_nationkey;
+    for (const auto& s : suppliers)
+        suppToNation[s.s_suppkey] = s.s_nationkey;
 
-    // Group lineitems by order key for fast lookup
+    // Order ID → List of LineItems
     std::unordered_map<int, std::vector<LineItem>> orderToLineItems;
     for (const auto& li : lineitems)
         orderToLineItems[li.l_orderkey].push_back(li);
 
-    // Multithreading setup
-    int numThreads = args.numThreads;
-    std::vector<std::thread> threads;
-    std::unordered_map<std::string, double> nationRevenue;
-    int chunkSize = orders.size() / numThreads;
+
+    //------ Multithreading setup ------
+
+    int numThreads = args.numThreads;  //Number of threads for launch
+    std::vector<std::thread> threads;  // Vector to store thread objects
+    std::unordered_map<std::string, double> nationRevenue;  // Shared result map that will hold revenue aggregated by nation
+
+    int chunkSize = orders.size() / numThreads;  // Size of each chunk to be processed by a thread
 
     log << "Launching " << numThreads << " threads...\n";
-    auto start = std::chrono::high_resolution_clock::now();
 
-    // Launch threads to process chunks of the orders vector
+    auto start = std::chrono::high_resolution_clock::now();   // Record start time for performance measurement
+
+    // Loop to create and launch each thread
     for (int i = 0; i < numThreads; ++i) {
-        int s = i * chunkSize;
-        int e = (i == numThreads - 1) ? orders.size() : (i + 1) * chunkSize;
+        int s = i * chunkSize;  // Start index for this thread
 
-        threads.emplace_back(processChunk,
-            std::ref(orders),
-            std::ref(custToNation),
-            std::ref(nationNames),
-            std::ref(nationToRegion),
-            std::ref(regionNames),
-            std::ref(orderToLineItems),
-            std::ref(suppToNation),
-            args.regionName, args.startDate, args.endDate,
-            std::ref(nationRevenue), s, e
+        int e = (i == numThreads - 1) ? orders.size() : (i + 1) * chunkSize;      // end index
+
+        // Launch a new thread to process a specific range of orders using processChunk()
+        threads.emplace_back(
+            processChunk,                     // Function to run
+            std::ref(orders),                 // Orders vector (shared across threads)
+            std::ref(custToNation),           // Customer → Nation lookup (shared)
+            std::ref(nationNames),            // Nation ID → Name (shared)
+            std::ref(nationToRegion),         // Nation → Region lookup (shared)
+            std::ref(regionNames),            // Region ID → Name (shared)
+            std::ref(orderToLineItems),       // Order ID → Line items (shared)
+            std::ref(suppToNation),           // Supplier → Nation lookup (shared)
+            args.regionName,
+            args.startDate,
+            args.endDate,
+            std::ref(nationRevenue),          // Shared result map (protected by mutex)
+            s,
+            e
         );
     }
 
-    // Wait for all threads to finish
-    for (auto& t : threads) t.join();
+    for (auto& t : threads) t.join();       // Wait for all threads to finish
 
+    //End time for performance measurement
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> diff = end - start;
 
     log << "Processing complete.\n\n";
-    log << "Sorting results...\n";
 
     // Sort results by descending revenue
     std::vector<std::pair<std::string, double>> sortedResults(nationRevenue.begin(), nationRevenue.end());
@@ -155,7 +174,7 @@ int main(int argc, char* argv[]) {
               [](auto& a, auto& b) { return a.second > b.second; });
 
     // Output the final revenue per nation
-    log << "Final Revenue by Nation:\n";
+    log << "Final Revenue by Nations:\n";
     for (const auto& [nation, rev] : sortedResults)
         log << nation << ": " << rev << "\n";
 
