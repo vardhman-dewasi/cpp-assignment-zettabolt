@@ -52,6 +52,7 @@ cd cpp-assignment-zettabolt
 ### 2. Generate TPC-H Data (Optional if you already have `.tbl` files)
 
 * Download and compile `dbgen` tool from the TPC-H benchmark.
+* 
     1.Go to the official TPC-H GitHub repository- https://github.com/electrum/tpch-dbgen
 
     2.Clone the repository:
