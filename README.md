@@ -84,7 +84,7 @@ g++ -std=c++17 -O2 -pthread main.cpp src/cli_parser.cpp src/file_reader.cpp -o m
 ./main ASIA 1995-01-01 1996-01-01 4 ./data/ output.txt
 ```
 
-### CLI Parameters:
+### 5. CLI Parameters:
 
 ```
 <REGION>        : Region name to filter (e.g., ASIA)
@@ -96,7 +96,7 @@ g++ -std=c++17 -O2 -pthread main.cpp src/cli_parser.cpp src/file_reader.cpp -o m
 ```
 
 
-## Sample Output (`output.txt`)
+### Sample Output (`output.txt`)
 
 ```
 Final Revenue by Nation :
