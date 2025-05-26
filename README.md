@@ -151,6 +151,34 @@ Execution Time: 0.562 seconds
 
 ---
 
+### Generating a Performance Report
+
+Follow these steps to create a meaningful performance comparison report:
+
+* Execute the Program
+  Launch the application using your selected parameters (e.g., region, date range, thread count).
+
+* Capture the Output
+  The results, including total revenue and execution time, will be saved to your specified output path.
+
+* Analyze and Compare
+  Review the output to assess how performance scales between single-threaded and multi-threaded executions. Highlight speed gains and identify any bottlenecks.
+
+### How Multithreading Boosts Performance
+Here's the rationale behind the observed speedup when leveraging multithreading:
+
+* Parallel Workload Distribution
+  Tasks are split across multiple threads, allowing simultaneous execution and significantly reducing total processing time.
+
+* Task Efficiency
+  Multithreading accelerates:
+    * I/O-bound tasks like reading large .tbl files
+    * CPU-bound tasks such as joining and aggregating data
+  This dual optimization improves overall throughput.
+
+### Scalability with Threads
+Performance typically improves with more threads—up to the point where thread management overhead (e.g., context switching) outweighs the benefits.
+
 ## Credits
 
 * TPC-H Benchmark ([www.tpc.org](http://www.tpc.org))
